@@ -1,12 +1,13 @@
 FILES THAT WE ARE USED IN THE PROJECT
-->AuthController
-->User
-->UserRepository
-->JwtRequestFilter
-->JwtUtil
-->SecurityConfig
-->AuthService
-->SessionManager
+->AuthController-- Manages user registration, login, and logout endpoints.
+->User-- In this required entities created in the database
+->UserRepository-- Manages database interactions for the User entity
+->JwtRequestFilter-- Intercepts incoming requests to validate JWTs
+->JwtUtil-- Handles JWT generation and validation.
+->SecurityConfig-- Configures Spring Security for JWT-based authentication.
+->AuthService-- Handles business logic for registration and login.
+->SessionManager-- Manages active sessions or JWT tokens (if applicable).
+
 
 1. Register Endpoint (/register)
 Flow:
@@ -19,11 +20,13 @@ Encrypt Password: If the username does not exist, encrypts the password using a 
 Save User to Database: Creates a new User object and saves it using UserRepository.save(user).
 Step 5: If registration is successful, AuthService returns a success message or user details back to AuthController.
 Step 6: AuthController sends a success response to the client, indicating the user was registered successfully.
+
 Components Involved:
 Controller: AuthController
 Service: AuthService
 Repository: UserRepository
 Model: User
+
 
 
 2. Login Endpoint (/authenticate)
@@ -37,12 +40,14 @@ Validate Password: Compares the provided password with the stored password (usin
 Generate JWT: If the password is valid, calls JwtUtil.generateToken(userDetails) to generate a JWT for the user.
 Step 5: AuthService returns the generated JWT and user details back to AuthController.
 Step 6: AuthController sends a response with the JWT token to the client, allowing the user to authenticate future requests.
+
 Components Involved:
 Controller: AuthController
 Service: AuthService
 Repository: UserRepository
 Model: User
 Security: JwtUtil
+
 
 
 3. Logout Endpoint (/logout) (Optional Implementation)
@@ -54,6 +59,7 @@ Step 4: Inside SessionManager (if applicable):
 Invalidate Token: The token is marked as invalid (e.g., stored in a blacklist or removed from an in-memory store).
 Optional: Implement any logic required to mark the session as inactive.
 Step 5: AuthController returns a success response, indicating the user has been logged out.
+
 Components Involved:
 Controller: AuthController
 Service: SessionManager (optional, depending on how tokens are managed)
@@ -68,6 +74,7 @@ Extract JWT: Retrieves the JWT token from the Authorization header.
 Validate Token: Calls JwtUtil.validateToken(token, userDetails) to ensure the token is valid.
 Set Authentication Context: If valid, retrieves the user details and sets the authentication context for this request.
 Step 4: The request is forwarded to the appropriate controller with the authenticated user details.
+
 Components Involved:
 Security: JwtRequestFilter, JwtUtil
 Config: SecurityConfig (to configure filter chain and session management)
