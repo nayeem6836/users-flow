@@ -1,45 +1,46 @@
 FILES THAT WE ARE USED IN THE PROJECT
-->AuthController-- Manages user registration, login, and logout endpoints.
-->User-- In this required entities created in the database
-->UserRepository-- Manages database interactions for the User entity
-->JwtRequestFilter-- Intercepts incoming requests to validate JWTs
-->JwtUtil-- Handles JWT generation and validation.
-->SecurityConfig-- Configures Spring Security for JWT-based authentication.
-->AuthService-- Handles business logic for registration and login.
-->SessionManager-- Manages active sessions or JWT tokens (if applicable).
+->AuthController
+->User
+->UserRepository
+->JwtRequestFilter
+->JwtUtil
+->SecurityConfig
+->AuthService
+->SessionManager
 
 
 1. Register Endpoint (/register)
 Flow:
-Step 1: A user sends a POST request to /register with their details (e.g., username, password, role).
-Step 2: The request is handled by AuthController's register() method.
-Step 3: AuthController calls AuthService.registerUser() with the user details.
-Step 4: Inside AuthService:
-Check if Username Exists: Calls UserRepository.existsByUsername(username) to see if the username is already taken.
-Encrypt Password: If the username does not exist, encrypts the password using a password encoder (e.g., BCryptPasswordEncoder).
-Save User to Database: Creates a new User object and saves it using UserRepository.save(user).
-Step 5: If registration is successful, AuthService returns a success message or user details back to AuthController.
-Step 6: AuthController sends a success response to the client, indicating the user was registered successfully.
-
+1.Client Request:
+Client sends a POST request to /register with user details (username, password, role).
+2.Controller (AuthController):
+register() method is called.
+Passes user details to AuthService.registerUser().
+3.Service (AuthService):
+Check Username: UserRepository.existsByUsername(username) verifies if the username already exists.
+Encrypt Password: If available, password is encrypted using a password encoder (e.g., BCryptPasswordEncoder).
+Save User: Creates a new User object, and saves it using UserRepository.save(user).
+4.Response:
+If successful, AuthController sends a success response back to the client.
 Components Involved:
 Controller: AuthController
 Service: AuthService
 Repository: UserRepository
 Model: User
 
-
-
 2. Login Endpoint (/authenticate)
 Flow:
-Step 1: A user sends a POST request to /authenticate with their username and password.
-Step 2: The request is handled by AuthController's login() method.
-Step 3: AuthController calls AuthService.authenticateUser() with the username and password.
-Step 4: Inside AuthService:
-Load User by Username: Calls UserRepository.findByUsername(username) to retrieve the user.
-Validate Password: Compares the provided password with the stored password (using BCryptPasswordEncoder.matches() or similar).
-Generate JWT: If the password is valid, calls JwtUtil.generateToken(userDetails) to generate a JWT for the user.
-Step 5: AuthService returns the generated JWT and user details back to AuthController.
-Step 6: AuthController sends a response with the JWT token to the client, allowing the user to authenticate future requests.
+1.Client Request:
+Client sends a POST request to /authenticate with username and password.
+2.Controller (AuthController):
+login() method is triggered.
+Forwards credentials to AuthService.authenticateUser().
+3.Service (AuthService):
+Load User: Retrieves user data via UserRepository.findByUsername(username).
+Validate Password: Compares input password with stored password using BCryptPasswordEncoder.matches().
+Generate JWT: If valid, generates a JWT using JwtUtil.generateToken(userDetails).
+4.Response:
+AuthController sends the JWT token in the response, allowing the client to use it for future authentication.
 
 Components Involved:
 Controller: AuthController
@@ -49,32 +50,37 @@ Model: User
 Security: JwtUtil
 
 
-
 3. Logout Endpoint (/logout) (Optional Implementation)
 Flow:
-Step 1: A user sends a POST request to /logout with their JWT token (or it may just be managed client-side by removing the token).
-Step 2: The request is handled by AuthController's logout() method.
-Step 3: AuthController calls SessionManager.invalidateToken(token) to handle token invalidation.
-Step 4: Inside SessionManager (if applicable):
-Invalidate Token: The token is marked as invalid (e.g., stored in a blacklist or removed from an in-memory store).
-Optional: Implement any logic required to mark the session as inactive.
-Step 5: AuthController returns a success response, indicating the user has been logged out.
+1.Client Request:
+Client sends a POST request to /logout, typically with the JWT (or the client can manage logout by clearing the token locally).
+2.Controller (AuthController):
+logout() method is called.
+Calls SessionManager.invalidateToken(token).
+3.Session Management (SessionManager):
+Invalidate Token: Adds token to a blacklist or removes it from an in-memory store.
+Optional logic may be added to mark the session as inactive.
+4.Response:
+AuthController returns a success response, indicating logout success.
 
 Components Involved:
 Controller: AuthController
-Service: SessionManager (optional, depending on how tokens are managed)
+Service: SessionManager (optional, if token management is implemented)
 
 
-JWT Token Validation (for Secured Endpoints)
+4. JWT Token Validation (for Secured Endpoints)
 Flow:
-Step 1: A user tries to access a secured endpoint (e.g., /user or /availability) with their JWT in the Authorization header.
-Step 2: The request goes through JwtRequestFilter, which intercepts the request before it reaches the controller.
-Step 3: Inside JwtRequestFilter:
-Extract JWT: Retrieves the JWT token from the Authorization header.
-Validate Token: Calls JwtUtil.validateToken(token, userDetails) to ensure the token is valid.
-Set Authentication Context: If valid, retrieves the user details and sets the authentication context for this request.
-Step 4: The request is forwarded to the appropriate controller with the authenticated user details.
+1.Client Request:
+Client sends a request to a secured endpoint (e.g., /user, /availability), with the JWT in the Authorization header.
+2.Filter (JwtRequestFilter):
+Intercepts the request before it reaches any controller.
+Extract JWT: Reads JWT from the Authorization header.
+Validate Token: Calls JwtUtil.validateToken(token, userDetails) to verify the JWT’s validity.
+Set Authentication: If valid, retrieves user details and sets authentication context for the request.
+3.Controller Access:
+If validation succeeds, the request proceeds to the appropriate controller with the authenticated user details.
 
 Components Involved:
 Security: JwtRequestFilter, JwtUtil
 Config: SecurityConfig (to configure filter chain and session management)
+
